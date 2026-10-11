@@ -14,18 +14,19 @@ function sim(a,b){const A=new Set(words(a)),B=new Set(words(b));let i=0;for(cons
 function protectDecimals(t){return String(t).replace(/(\d)\.(?=\d)/g,'$1§DOT§').replace(/(\d),(?=\d)/g,'$1§COMMA§')}
 function restoreDecimals(t){return String(t).replace(/§DOT§/g,'.').replace(/§COMMA§/g,',')}
 function splitClauses(t){return protectDecimals(t).split(/[.!?\n]+/).map(x=>restoreDecimals(clean(x))).filter(Boolean)}
+const NUM='(?:\\d+|bir|iki|üç|dört|beş|altı|yedi|sekiz|dokuz|on)';
 const MONEY_RE=/(?:\d[\d.,]*\s*(?:\$|₺|€|usdt|usd|tl|dolar))|(?:(?:\$|₺|€)\s*\d[\d.,]*)/gi;
-const DURATION_RE=/\b\d+\s*(?:dakika(?:da|dır|lık)?|dk|saat(?:te|tir|lik)?|gün(?:de|dür|lük)?|hafta(?:da|dır|lık)?|ay(?:da|dır|lık)?|yıl(?:da|dır|lık)?|gece(?:de)?)\b/gi;
-const COUNT_RE=/\b\d+\s*(?:kişi(?:ye|den)?|arkadaş(?:a|la|tan|ımız|ımıza)?|üye(?:ye|den)?|katılımcı(?:ya|dan)?)\b/gi;
+const DURATION_RE=new RegExp('\\b'+NUM+'\\s*(?:dakika(?:da|dır|lık)?|dk|saat(?:te|tir|lik)?|gün(?:de|dür|lük)?|hafta(?:da|dır|lık)?|ay(?:da|dır|lık)?|yıl(?:da|dır|lık)?|gece(?:de)?)\\b','gi');
+const COUNT_RE=new RegExp('\\b'+NUM+'\\s*(?:kişi(?:ye|den)?|arkadaş(?:a|la|tan|ımız|ımıza)?|üye(?:ye|den)?|katılımcı(?:ya|dan)?)\\b','gi');
 I.value=get('vanta_idea')||'';IMG.checked=get('vanta_img')==='1';
 I.oninput=()=>set('vanta_idea',I.value);IMG.onchange=()=>set('vanta_img',IMG.checked?'1':'0');
 function detect(t){
  const l=norm(t),money=t.match(MONEY_RE)||[],durations=t.match(DURATION_RE)||[],counts=t.match(COUNT_RE)||[],clauses=splitClauses(t);
  const giveaway=/hediye|çekiliş|kazanan|vereceğim|veriyorum|göndereceğim|dağıt/.test(l);
  const question=/\?|sizce|ne düşünüyorsunuz|hangisi/.test(t.toLowerCase());
- const journey=/başlad|başlangıç|bakiye|işlem|kâr|kar|pnl|kazand|ulaşt|elimde|vardı/.test(l)&&money.length>=2;
+ const journey=/başlad|başlangıç|bakiye|işlem|kâr|kar|pnl|kazand|ulaşt|elimde|vardı|oldu|çıktı|dönüştü|yaptık|geldi|çıkardık|arttı/.test(l)&&money.length>=2;
  const signals={loss:/zarar|eksi|yanlış|geri verd|kaybet/.test(l),pressure:/risk|karar|bekle|kork|uyuma|uyku|gece|sabah|pozisyon|tereddüt/.test(l),human:/uykusuz|uyuyamad|yemeği unut|sabaha kadar|stres|yorul|geceler|saatlerce|yüzlerce saat/.test(l),invisible:/kimsenin görmediği|görünmeyen|yüzlerce saat|uyumadan|tereddüt ettiğim|arkasında|arasında/.test(l),identity:/bir lira param|param olmadığı|nerelere geldim|nereden nereye|hayat|şans|umut|savaş/.test(l),group:/grup|ekip|beraber|birlikte/.test(l),live:/canlı|yayın/.test(l)};
- let intent='general';if(giveaway)intent='giveaway';else if(question)intent='question';else if(journey)intent='journey';
+ let intent='general';if(giveaway)intent='giveaway';else if(journey)intent='journey';else if(question)intent='question';
  const richness=clauses.length+Object.values(signals).filter(Boolean).length+Math.max(0,money.length-2)+Math.min(2,durations.length);
  const sparse=richness<=3;
  let mode='natural';if(intent==='journey'){if(sparse)mode='sparse';else if(signals.identity)mode='identity';else if(signals.human)mode='human_cost';else if(signals.invisible)mode='invisible_work';else if(signals.loss)mode='contrast';else if(money.length>=3)mode='progressive';else if(signals.pressure)mode='pressure';else mode='scale'}
@@ -42,14 +43,14 @@ function semanticLock(text,d){
  return true;
 }
 function dedupeLines(text){const out=[],seen=[];for(const raw of String(text).split(/\n+/)){const x=clean(raw);if(!x)continue;if(seen.some(y=>norm(x)===norm(y)||sim(x,y)>.90))continue;seen.push(x);out.push(x)}return out.join('\n\n')}
+function escapeRe(s){return String(s).replace(/[.*+?^${}()|[\]\\]/g,'\\$&')}
 function clauseWith(c,re){return c.find(x=>re.test(x))||''}
-function isolateMoneyClause(c,m){if(!m||!norm(c).includes(norm(m)))return c;const only=clean(c).match(new RegExp('^'+m.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'[\\s.!?]*$','i'));return only?m:c}
-function sourceCandidates(d){const c=d.clauses.slice(),A=d.money[0]||'',B=d.money[d.money.length-1]||'';const start=clauseWith(c,A?new RegExp(A.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'i'):/$a/),result=clauseWith(c,B?new RegExp(B.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'i'):/$a/);
+function sourceCandidates(d){const c=d.clauses.slice(),A=d.money[0]||'',B=d.money[d.money.length-1]||'';const start=clauseWith(c,A?new RegExp(escapeRe(A),'i'):/$a/),result=clauseWith(c,B?new RegExp(escapeRe(B),'i'):/$a/);
  const psych=c.filter(x=>{const l=norm(x);if(d.mode==='human_cost')return /uyku|stres|gece|sabah|yorul|saat/.test(l);if(d.mode==='invisible_work')return /görünm|saat|tereddüt|uyumadan|arasında/.test(l);if(d.mode==='contrast')return /zarar|eksi|yanlış|geri verd|kaybet/.test(l);if(d.mode==='pressure')return /risk|karar|bekle|kork|pozisyon|tereddüt/.test(l);if(d.mode==='identity')return /param|hayat|şans|umut|nereden|geldim|savaş/.test(l);return false});
  return{c,A,B,start,result,psych};
 }
 function sparseBuild(d,i){const A=d.money[0]||'',B=d.money[d.money.length-1]||'',T=d.durations[0]||'',source=clean(d.raw);const v=[source,[A,T,B].filter(Boolean).join('\n\n'),T?[`${A}.`,`${T}.`,`${B}.`].join('\n\n'):[`${A}.`,`${B}.`].join('\n\n'),T?`${T}: ${A} → ${B}`:`${A} → ${B}`];return{text:dedupeLines(v[i%v.length]),arch:['source_clean','sparse_stack','sparse_punch','sparse_arrow'][i%4],intent:d.intent}}
-function giveawayBuild(d,i){const source=clean(d.raw),A=d.money[0]||'',C=d.counts[0]||'',T=d.durations[0]||'';const variants=[source];if(A&&C)variants.push(`${C}: ${A} hediye.`);if(A&&T&&/açıkla|duyur|sonra|yarın|akşam|birazdan/.test(d.l))variants.push(`${A} hediye.\n\n${T} sonra açıklıyorum.`);return{text:dedupeLines(variants[i%variants.length]),arch:['source_clean','giveaway_compact','giveaway_delay'][i%3],intent:d.intent}}
+function giveawayBuild(d,i){const source=clean(d.raw),clauses=d.clauses.filter(Boolean);const variants=[source];if(clauses.length>1)variants.push(dedupeLines(clauses.join('\n\n')));return{text:variants[i%variants.length],arch:i%2?'giveaway_blocks':'source_clean',intent:d.intent}}
 function journeyBuild(d,i){const s=sourceCandidates(d),all=s.c.slice();if(!all.length)return{text:clean(d.raw),arch:'source_clean',intent:d.intent};let parts=[];
  if(d.mode==='progressive'){const mids=d.money.slice(1,-1);parts=[s.start||all[0],...mids.map(x=>x),...all.filter(x=>x!==s.start&&x!==s.result&&!mids.some(m=>norm(x).includes(norm(m)))),s.result||s.B];}
  else if(['human_cost','invisible_work','contrast','pressure','identity'].includes(d.mode)){const remaining=all.filter(x=>x!==s.start&&x!==s.result&&!s.psych.includes(x));parts=i%2===0?[s.start||all[0],...s.psych,s.result||s.B,...remaining]:[s.start||all[0],s.result||s.B,...s.psych,...remaining];}
