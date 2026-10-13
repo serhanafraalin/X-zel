@@ -1,37 +1,16 @@
 <!doctype html>
 <html lang="tr">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#05070b">
-<title>Vanta — X Intelligence</title>
-<link rel="stylesheet" href="styles.css?v=2.3">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#21162a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Luminae • Yönetim Paneli</title>
+  <link rel="stylesheet" href="styles.css?v=4.0">
 </head>
 <body>
-<div class="app">
-  <div class="nav">
-    <div class="brand"><div class="mark"></div><div>VANTA<small>X Intelligence</small></div></div>
-    <div style="display:flex;align-items:center;gap:8px"><div class="live">SMART EXPLORE</div><div class="live" style="color:#fff;border-color:#3a4654;background:#111820">v2.3</div></div>
-  </div>
-  <div class="hero">
-    <div class="eyebrow">Private writing engine</div>
-    <h1>Bir fikri yaz.<br>Gerisini keşfet seçsin.</h1>
-    <p>Gerçekleri eksiltmeden korur; yazdığını aynen geri vermek yerine güvenli biçimde yeniden yazar. Rakam, süre, kişi ve grup bilgileri kilitlidir.</p>
-  </div>
-  <div class="composer">
-    <textarea id="idea" placeholder="Ne olduysa olduğu gibi yaz. Dağınık olabilir. Rakam, olay, fikir, sinir olduğun bir şey… fark etmez."></textarea>
-    <div class="tools">
-      <div class="tog"><label class="switch"><input id="img" type="checkbox"><span class="slider"></span></label><span>Görsel var</span></div>
-      <button class="run" id="run">Keşfeti Çalıştır</button>
-    </div>
-    <div class="subline"><span class="micro">Anti-Echo</span><span class="micro">Fact Completeness</span><span class="micro">Duplicate Guard</span><span class="micro">Turkish Parser</span><span class="micro">Semantic Fact Lock</span></div>
-  </div>
-  <div class="stage" id="stage">
-    <div class="scan"><div class="scanTop"><b>Keşfet simülasyonu</b><span id="scanText">v2.3 motoru hazırlanıyor…</span></div><div class="track"><div class="bar" id="bar"></div></div></div>
-    <div id="results"></div>
-    <div class="foot">Bu, gerçek X dağıtım testi değildir. İçerik kalitesini ve okuma psikolojisini modeller; keşfete çıkış garanti edilemez.</div>
-  </div>
-</div>
-<script src="app-v2.3.js?v=2.3"></script>
+  <div id="app"></div>
+  <script src="luminae.js?v=4.0"></script>
 </body>
 </html>
